@@ -50,6 +50,25 @@ Before starting :checkered_flag:, you need to have [Git](https://git-scm.com) an
 $ go install github.com/extendswork/gogit/cmd/gogit
 
 ```
+Default git server GitHub is used.
+In addition, you can use Gitlab and Bitbucket.
+You can download release versions and versioned versions
+
+```bash	
+# Start gogit
+gogit user/repo my-project
+gogit github:user/repo my-project
+gogit github:user/repo#v1.0.0 my-project
+gogit github:user/repo#master my-project
+
+gogit gitlab:user/repo my-project
+gogit gitlab:user/repo#v1.0.0 my-project
+gogit gitlab:user/repo#master my-project
+
+gogit bitbucket:user/repo my-project
+gogit bitbucket:user/repo#v1.0.0 my-project
+gogit bitbucket:user/repo#master my-project
+```	
 
 ## :memo: License ##
 
