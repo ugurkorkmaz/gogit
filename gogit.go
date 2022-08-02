@@ -135,7 +135,10 @@ func (git *Git) Extract(dir string) error {
 	}
 	oldpath := filepath.Join(git.Repo + "-" + git.Type)
 	newpath := filepath.Join(dir)
-
+	err = os.Chmod(newpath, 0777)
+	if err != nil {
+		return err
+	}
 	err = os.Rename(oldpath, newpath)
 	if err != nil {
 		return err
