@@ -7,7 +7,7 @@ import (
 	"github.com/extendswork/gogit"
 )
 
-const version string = "1.1.2"
+const version string = "1.1.3"
 
 func main() {
 	var repo string
