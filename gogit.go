@@ -124,7 +124,7 @@ func (git *Git) Extract(dir string) error {
 	if err != nil {
 		return err
 	}
-	err = Untar(dir, file)
+	err = Untar(file)
 	if err != nil {
 		return err
 	}
@@ -133,10 +133,17 @@ func (git *Git) Extract(dir string) error {
 	if err != nil {
 		return err
 	}
+	oldpath := filepath.Join(git.Repo + "-" + git.Type)
+	newpath := filepath.Join(dir)
+
+	err = os.Rename(oldpath, newpath)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func Untar(dst string, r io.Reader) error {
+func Untar(r io.Reader) error {
 
 	gzr, err := gzip.NewReader(r)
 	if err != nil {
@@ -165,7 +172,9 @@ func Untar(dst string, r io.Reader) error {
 		}
 
 		// the target location where the dir/file should be created
-		target := filepath.Join(dst, header.FileInfo().Name())
+		target := filepath.Join(header.Name)
+
+		// check the child/dir type
 
 		// the following switch could also be done using fi.Mode(), not sure if there
 		// a benefit of using one vs. the other.
