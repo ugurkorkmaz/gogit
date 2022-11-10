@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/extendswork/gogit"
+	"github.com/ugurkorkmaz/gogit"
 )
 
 const version string = "1.1.3"

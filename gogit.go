@@ -6,110 +6,121 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 )
 
-const Github string = "https://github.com/"
-const Gitlab string = "https://gitlab.com/"
-const Bitbucket string = "https://bitbucket.org/"
+const (
+	_github    string = "https://github.com/%s/%s/archive/%s.tar.gz"
+	_gitlab    string = "https://gitlab.com/%s/%s/repository/archive.tar.gz?ref=%s"
+	_bitbucket string = "https://bitbucket.org/%s/%s/get/%s.tar.gz"
+)
 
-type Git struct {
-	Host string
-	User string
-	Repo string
-	Type string
-	File string
+const _regex string = `(?m)(?:(\w+):)?([\w\.\-]+)/([\w\.\-]+)(?:[#]([\w\.\-]+))?`
+
+var (
+	ErrInvalidServer     = errors.New("invalid git server")
+	ErrInvalidUrl        = errors.New("invalid url")
+	ErrUserNotFoundInUrl = errors.New("user not found in url")
+	ErrRepoNotFoundInUrl = errors.New("repo not found in url")
+)
+
+type git struct {
+	// Base address of the Git server.
+	host string
+	// Your username on the Git server.
+	user string
+	// Your repo on the Git server.
+	repo string
+	// The name of the version or branch of the repo.
+	types string
+	// The name of the file downloaded to the local.
+	file string
 }
 
-func New() *Git {
-	return &Git{}
+func New() *git {
+	return &git{}
 }
-func (git *Git) Run(prefix string, dir string) {
-	err := git.Parser(prefix)
-	if err != nil {
-		log.Fatal(err)
-	}
-	url, err := git.GetURL()
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = git.Download(url)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = git.Extract(dir)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("Downloaded and extracted " + git.User + "/" + git.Repo + " to " + dir)
-}
+func (git *git) Run(prefix string, dir string) error {
 
-func (git *Git) GetURL() (string, error) {
-	var url string
-	var orl string = git.User + "/" + git.Repo
-	switch git.Host {
-	case "github":
-		url = Github + orl + "/archive/" + git.Type + ".tar.gz"
-	case "gitlab":
-		url = Gitlab + orl + "/repository/archive.tar.gz?ref=" + git.Type
-	case "bitbucket":
-		url = Bitbucket + orl + "/get/" + git.Type + ".tar.gz"
-	default:
-		return "", errors.New("invalid server")
+	if err := git.Parser(prefix); err != nil {
+		return err
 	}
-	return url, nil
-}
-func (git *Git) Parser(url string) error {
-
-	match := regexp.MustCompile(`(?m)(?:(\w+):)?([\w\.\-]+)/([\w\.\-]+)(?:[#]([\w\.\-]+))?`).FindStringSubmatch(url)
-
-	if len(match) == 0 {
-		return errors.New("invalid url")
+	url, err := git.GetDownloadURL()
+	if err != nil {
+		return err
 	}
-	if match[1] != "" {
-		git.Host = match[1]
+	if err := git.Download(url); err != nil {
+		return err
 	}
-	if match[2] != "" {
-		git.User = match[2]
+	if err := git.Extract(dir); err != nil {
+		return err
 	}
-	if match[3] != "" {
-		git.Repo = match[3]
-	}
-	if match[4] != "" {
-		git.Type = match[4]
-	}
-	if git.Type == "" {
-		git.Type = "master"
-	}
-	if git.Host == "" {
-		git.Host = "github"
-	}
-	if git.User == "" {
-		return errors.New("user is empty")
-	}
-	if git.Repo == "" {
-		return errors.New("repo is empty")
-	}
-	git.File = git.Repo + "-" + git.Type + ".tar.gz"
 	return nil
 }
-func (git *Git) Download(path string) error {
+
+func (git *git) GetDownloadURL() (string, error) {
+	if git.host == "github" {
+		return fmt.Sprintf(_github, git.user, git.repo, git.types), nil
+	}
+	if git.host == "gitlab" {
+		return fmt.Sprintf(_gitlab, git.user, git.repo, git.types), nil
+	}
+	if git.host == "bitbucket" {
+		return fmt.Sprintf(_bitbucket, git.user, git.repo, git.types), nil
+	}
+	return "", ErrInvalidServer
+}
+func (git *git) Parser(url string) error {
+
+	match := regexp.MustCompile(_regex).FindStringSubmatch(url)
+
+	if len(match) == 0 {
+		return ErrInvalidUrl
+	}
+	if match[1] != "" {
+		git.host = match[1]
+	}
+	if match[2] != "" {
+		git.user = match[2]
+	}
+	if match[3] != "" {
+		git.repo = match[3]
+	}
+	if match[4] != "" {
+		git.types = match[4]
+	}
+	if git.types == "" {
+		git.types = "master"
+	}
+	if git.host == "" {
+		git.host = "github"
+	}
+	if git.user == "" {
+		return ErrUserNotFoundInUrl
+	}
+	if git.repo == "" {
+		return ErrRepoNotFoundInUrl
+	}
+	git.file = git.repo + "-" + git.types + ".tar.gz"
+	return nil
+}
+func (git *git) Download(path string) error {
 	request, err := http.Get(path)
 	if err != nil {
 		return err
 	}
 	defer request.Body.Close()
 	if request.StatusCode != 200 {
-		return errors.New("git server error code: " + request.Status + " ")
+		return errors.New(strings.ToLower(http.StatusText(request.StatusCode)))
 	} else {
 
-		file, err := os.Create(git.File)
+		file, err := os.Create(git.file)
 		if err != nil {
-			return err
+			return errors.New("")
 		}
 		defer file.Close()
 		_, err = io.Copy(file, request.Body)
@@ -119,8 +130,8 @@ func (git *Git) Download(path string) error {
 	}
 	return nil
 }
-func (git *Git) Extract(dir string) error {
-	file, err := os.Open(git.File)
+func (git *git) Extract(dir string) error {
+	file, err := os.Open(git.file)
 	if err != nil {
 		return err
 	}
@@ -129,11 +140,11 @@ func (git *Git) Extract(dir string) error {
 		return err
 	}
 	file.Close()
-	err = os.Remove(git.File)
+	err = os.Remove(git.file)
 	if err != nil {
 		return err
 	}
-	oldpath := filepath.Join(git.Repo + "-" + git.Type)
+	oldpath := filepath.Join(git.repo + "-" + git.types)
 	newpath := filepath.Join(dir)
 	err = os.Chmod(newpath, 0777)
 	if err != nil {
