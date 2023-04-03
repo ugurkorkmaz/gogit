@@ -1,13 +1,13 @@
 <h1 align="center">Gogit</h1>
 
 <p align="center">
-  <img alt="Github top language" src="https://img.shields.io/github/languages/top/extendswork/gogit?color=56BEB8">
+  <img alt="Github top language" src="https://img.shields.io/github/languages/top/ugurkorkmaz/gogit?color=56BEB8">
 
-  <img alt="Github language count" src="https://img.shields.io/github/languages/count/extendswork/gogit?color=56BEB8">
+  <img alt="Github language count" src="https://img.shields.io/github/languages/count/ugurkorkmaz/gogit?color=56BEB8">
 
-  <img alt="Repository size" src="https://img.shields.io/github/repo-size/extendswork/gogit?color=56BEB8">
+  <img alt="Repository size" src="https://img.shields.io/github/repo-size/ugurkorkmaz/gogit?color=56BEB8">
 
-  <img alt="License" src="https://img.shields.io/github/license/extendswork/gogit?color=56BEB8">
+  <img alt="License" src="https://img.shields.io/github/license/ugurkorkmaz/gogit?color=56BEB8">
 </p>
 
 <br>
@@ -27,7 +27,7 @@ The following tools were used in this project:
 
 ```bash
 # Install gogit
-$ go install github.com/extendswork/gogit/cmd/gogit
+$ go install github.com/ugurkorkmaz/gogit/cmd/gogit
 
 ```
 Default git server GitHub is used.
@@ -55,7 +55,7 @@ gogit bitbucket:user/repo#master my-project
 This project is under license from MIT. For more details, see the [LICENSE](LICENSE) file.
 
 
-Made with :heart: by <a href="https://github.com/extendswork" target="_blank">Extends Work</a>
+Made with :heart: by <a href="https://github.com/ugurkorkmaz" target="_blank">Extends Work</a>
 
 &#xa0;
 ## See also
